@@ -3,6 +3,7 @@
 module Jekyll
   module Tags
     class DetailsTag < Liquid::Block
+
       def initialize(tag_name, markup, tokens)
         super
         @caption = markup

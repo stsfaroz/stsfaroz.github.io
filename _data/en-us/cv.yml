@@ -1,0 +1,69 @@
+- title: General Information
+  type: map
+  contents:
+    - name: Full Name
+      value: Salman Faroz S T
+    - name: Date of Birth
+      value: 13th August 1997
+    - name: Languages
+      value: Tamil, English
+
+- title: Academic Interests
+  type: nested_list
+  contents:
+    - title: Mathematics
+      items:
+        - "Vector Calculus: Good in understanding and applying vector field theories."
+        - "Optimization Techniques: Experienced in using optimization methods for problem-solving."
+    - title: Generative Artificial Intelligence
+      items:
+        - "Model Fine Tuning : Skilled in fine-tuning AI models for specific tasks."
+        - "Quantization Methods: Knowledgeable in quantizing models for efficient deployment."
+        - ...
+    - title: Discriminative Artificial Intelligence
+      items:
+        - "Bayesian Inference: Applied Bayes’ Theorem for statistical modeling and inference."
+        - "Attention Mechanisms: Experienced in implementing attention mechanisms from scratch"
+        - ...
+
+- title: Education
+  type: time_table
+  contents:
+    - title: Bachelor of Engineering in Computer Science
+      institution: N.S.N COLLEGE OF ENGINEERING AND TECHNOLOGY , Tamilnadu , India.
+      year: 2020
+
+    - title: Diploma in Computer Science
+      institution: KONGU HI-TEK POLYTECHNIC COLLEGE , Tamilnadu , India.
+      year: 2015
+      # description:
+      #   - 'Dissertation: <a href="https://repositorio.unicamp.br/acervo/detalhe/1091235?guid=1665060444695&returnUrl=%2fresultado%2flistar%3fguid%3d1665060444695%26quantidadePaginas%3d1%26codigoRegistro%3d1091235%231091235&i=1">Single Image Super-Resolution based on Capsule Neural Networks</a> (PT-BR)'
+
+    # - title: BS in Computer Engineering
+    #   institution: Universidade Federal do Amazonas, Manaus, Brazil
+    #   year: 2012
+    #   description:
+    #     - "Final Project: Development of an Eclipse Plug-in for the ESBMC Tool using Zest Toolkit (PT-BR)"
+    #     - title: Extension Project (Hiwi Job)
+    #       contents:
+    #         - "Institut für Automatisierungs- und Softwaretechnik - Universität Stuttgart"
+    #         - "Project: Improve Academic use of Microsoft Office through VBA Macros"
+    #     - title: Training of Young Engineers for Digital TV Software Development
+    #       contents:
+    #         - Universidade Federal do Amazonas | CETELI - Centro de P&D em Tecnologia Eletrônica e da Informação
+
+- title: Professional Experience
+  type: time_table
+  contents:
+    - title: Machine Learning Engineer
+      institution: Instituto de Pesquisas Eldorado
+      year: 2015 - Present
+      description:
+        - As the sole AI professional at this startup, I have been responsible for spearheading all AI initiatives. My work encompasses Generative AI (LLMs), Computer Vision, and NLP.
+        - I have been Building ML/DL models tailored to speciﬁc use cases, and managing the deployment phase using CI/CD pipelines, Docker, and Kubernates.I have successfully executed numerous Proof of Concepts (POCs) for clients, demonstrating the potential and eﬀectiveness of our AI solutions.
+
+    - title: Udemy Instructor (Self Employed)
+      institution: Udemy
+      year: 2021 - Present
+      description:
+        - As a self-employed instructor on Udemy, I developed and delivered a course that has attracted over 8000+ students. I managed all aspects of the course, including content creation, student engagement, and feedback collection.

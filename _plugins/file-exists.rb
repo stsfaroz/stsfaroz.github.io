@@ -1,5 +1,6 @@
 module Jekyll
   class FileExistsTag < Liquid::Tag
+
     def initialize(tag_name, path, tokens)
       super
       @path = path

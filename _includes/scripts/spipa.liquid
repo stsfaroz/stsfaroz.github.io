@@ -1,0 +1,136 @@
+{% if page.name == 'about.md' and page.animated_background %}
+<script
+    defer
+    src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+    integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k="
+    crossorigin="anonymous"
+></script>
+<script defer type="text/javascript">
+    function hexToRGB(h) {
+      let r = 0, g = 0, b = 0;
+      if (h.length == 4) {
+        r = '0x' + h[1] + h[1];
+        g = '0x' + h[2] + h[2];
+        b = '0x' + h[3] + h[3];
+      } else if (h.length == 7) {
+        r = '0x' + h[1] + h[2];
+        g = '0x' + h[3] + h[4];
+        b = '0x' + h[5] + h[6];
+      }
+      return { r: +r, g: +g, b: +b };
+    }
+ 
+    var App = {};
+    App.setup = function () {
+      var canvas = document.getElementsByTagName('canvas')[0];
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      this.canvas = canvas;
+      this.ctx = this.canvas.getContext('2d');
+      this.stars = [];
+      this.maxStars = 300; // Number of stars
+      this.createStars();
+      this.meteor = this.createMeteor(); // Create a meteor
+      this.meteorTimeout = null; // Timeout for meteor delay
+      this.meteorVisible = true; // Flag to control meteor visibility
+      this.animate();
+    };
+ 
+    App.createStars = function () {
+      for (let i = 0; i < this.maxStars; i++) {
+        this.stars.push({
+          x: Math.random() * this.canvas.width,
+          y: Math.random() * this.canvas.height,
+          size: Math.random() * 1 + 0.5, // Size between 1 and 4
+          speed: Math.random() * 0.5 + 0.1, // Speed between 0.1 and 0.3
+          stationary: Math.random() < 0.3 // 30% chance to be stationary
+        });
+      }
+    };
+
+    App.createMeteor = function () {
+      return {
+        x: 0, // Start from the left
+        y: 0, // Start from the top
+        size: 5, // Size of the meteor
+        tailLength: 30, // Length of the tail
+        speed: 3 // Speed of the meteor
+      };
+    };
+
+    App.animate = function () {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.stars.forEach(star => {
+        this.drawStar(star);
+        if (!star.stationary) {
+          star.y -= star.speed; // Move star up
+          if (star.y < 0) {
+            star.y = this.canvas.height; // Reset star to the bottom
+            star.x = Math.random() * this.canvas.width; // Randomize x position
+          }
+        }
+      });
+      if (this.meteorVisible) {
+        this.drawMeteor(this.meteor); // Draw the meteor
+      }
+      this.updateMeteor(this.meteor); // Update the meteor position
+      requestAnimationFrame(this.animate.bind(this));
+    };
+
+    App.drawStar = function (star) {
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // White color with some transparency
+      this.ctx.beginPath();
+      this.ctx.arc(star.x, star.y, star.size, 0, 2 * Math.PI); // Draw circular star
+      this.ctx.closePath();
+      this.ctx.fill();
+    };
+
+    App.drawMeteor = function (meteor) {
+      // Draw the tail with a slight angle
+      const tailAngle = Math.cos(400); // 20 degrees
+      const tailX = meteor.x - meteor.tailLength * Math.cos(tailAngle);
+      const tailY = meteor.y + meteor.tailLength * Math.sin(tailAngle);
+
+      // Draw the tail
+      const tailGradient = this.ctx.createLinearGradient(meteor.x, meteor.y, tailX, tailY);
+      tailGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Start with bright white
+      tailGradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fade to transparent
+
+      this.ctx.strokeStyle = tailGradient;
+      this.ctx.lineWidth = 5; // Increase the width to make it look like a triangle
+      this.ctx.beginPath();
+      this.ctx.moveTo(meteor.x, meteor.y);
+      this.ctx.lineTo(tailX, tailY);
+      this.ctx.stroke();
+
+      // Draw the meteor
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Bright white color
+      this.ctx.beginPath();
+      this.ctx.arc(meteor.x, meteor.y, meteor.size, 0, 2 * Math.PI); // Draw circular meteor
+      this.ctx.closePath();
+      this.ctx.fill();
+    };
+
+    App.updateMeteor = function (meteor) {
+      if (this.meteorTimeout) return; // Skip update if timeout is active
+
+      meteor.x += meteor.speed; // Move meteor right
+      meteor.y += meteor.speed * 0.5; // Move downwards
+
+      // Reset meteor when it goes off screen
+      if (meteor.x > this.canvas.width || meteor.y > this.canvas.height) {
+        this.meteorVisible = false; // Make meteor invisible
+        this.meteorTimeout = setTimeout(() => {
+          meteor.x = 0; // Reset to the left
+          meteor.y = 0; // Reset to the top
+          this.meteorVisible = true; // Make meteor visible again
+          this.meteorTimeout = null; // Clear timeout
+        }, 10000); // 30 seconds delay
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      App.setup();
+    });
+</script>
+{% endif %}

@@ -1,14 +1,8 @@
 github_users:
-  - torvalds
-  - alshedivat
-
-repo_description_lines_max: 2
+  - stsfaroz
 
 github_repos:
-  - alshedivat/al-folio
-  - jekyll/jekyll
-  - twbs/bootstrap
-  - jquery/jquery
-  - FortAwesome/Font-Awesome
-  - mathjax/MathJax
-  - jpswalsh/academicons
+  - stsfaroz/Graph-Convolutional-Networks-with-Cora-Dataset
+  - stsfaroz/Toxicity-classifier-using-ReactJs
+  - stsfaroz/pictures
+  - stsfaroz/Siamese-Network-with-Contrastive-loss
