@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://stsfaroz.github.io/sitemap.xml
