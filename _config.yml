@@ -272,12 +272,8 @@ display_categories: ["blockquotes"] # these categories will be displayed on the 
 # -----------------------------------------------------------------------------
 
 scholar:
-  last_name:
-    [
-      Salman,
-      salman faroz
-    ]
-  first_name: [Salman,Salman F.]
+  last_name: [Salman, salman faroz]
+  first_name: [Salman, Salman F.]
 
   style: apa
   locale: en
