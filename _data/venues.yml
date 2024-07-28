@@ -1,6 +1,7 @@
-"AJP":
-  url: https://aapt.scitation.org/journal/ajp
-  color: "#00369f"
+"Arxiv":
+  url: https://arxiv.org/
+  color: "#009f36"
 
-"PhysRev":
-  url: https://journals.aps.org/
+"IJSREM":
+  color: "#00369f"
+  url: https://ijsrem.com/
