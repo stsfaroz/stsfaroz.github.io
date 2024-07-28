@@ -5,7 +5,7 @@ categories:
   work: work
 contact_note: ""
 footer_text: > # the ">" symbol means to ignore newlines until "titles:"
-  Powered by Jekyll with <a href="https://github.com/stsfaroz/stsfaroz.github.io">multi-language-al-folio</a> theme.
+  Powered by Jekyll with <a href="https://github.com/george-gca/multi-language-al-folio">multi-language-al-folio</a> theme.
   Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
 latest_posts: Latest posts
 news: News
