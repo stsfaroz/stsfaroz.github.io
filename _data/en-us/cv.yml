@@ -57,13 +57,13 @@
   contents:
     - title: Machine Learning Engineer
       institution: Beez Innovation Labs Pvt. Ltd.
-      year: 2015 - Present
+      year: 2022 - Present
       description:
         - As the sole AI professional at this startup, I have been responsible for spearheading all AI initiatives. My work encompasses Generative AI (LLMs), Computer Vision, and NLP.
         - I have been Building ML/DL models tailored to speciﬁc use cases, and managing the deployment phase using CI/CD pipelines, Docker, and Kubernates.I have successfully executed numerous Proof of Concepts (POCs) for clients, demonstrating the potential and eﬀectiveness of our AI solutions.
 
     - title: Udemy Instructor (Self Employed)
       institution: Udemy
-      year: 2021 - Present
+      year: 2021 - 2022
       description:
         - As a self-employed instructor on Udemy, I developed and delivered a course that has attracted over 8000+ students. I managed all aspects of the course, including content creation, student engagement, and feedback collection.
