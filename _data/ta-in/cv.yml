@@ -29,7 +29,7 @@
 - title: Education
   type: time_table
   contents:
-    - title: M.Tech. Artificial Intelligence and Machine Learning
+    - title: Master of Technology in Artificial Intelligence and Machine Learning
       institution: Indian Institute of Technology, Jammu
       year: 2026
 
@@ -68,7 +68,7 @@
 
     - title: Machine Learning Engineer
       institution: Beez Innovation Labs Pvt. Ltd.
-      year: 2022 - Present
+      year: 2022 - 2024
       description:
         - As the sole AI professional at this startup, I have been responsible for spearheading all AI initiatives. My work encompasses Generative AI (LLMs), Computer Vision, and NLP.
         - I have been Building ML/DL models tailored to speciﬁc use cases, and managing the deployment phase using CI/CD pipelines, Docker, and Kubernates.I have successfully executed numerous Proof of Concepts (POCs) for clients, demonstrating the potential and eﬀectiveness of our AI solutions.
