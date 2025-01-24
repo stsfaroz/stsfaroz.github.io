@@ -29,6 +29,10 @@
 - title: Education
   type: time_table
   contents:
+    - title: M.Tech. Artificial Intelligence and Machine Learning
+      institution: Indian Institute of Technology, Jammu
+      year: 2026
+
     - title: Bachelor of Engineering in Computer Science
       institution: N.S.N COLLEGE OF ENGINEERING AND TECHNOLOGY , Tamilnadu , India.
       year: 2020
@@ -55,6 +59,13 @@
 - title: Professional Experience
   type: time_table
   contents:
+    - title: Senior Machine Learning Engineer
+      institution: FirstSource
+      year: 2024 - Present
+      description:
+        - Specializing in healthcare solutions using advanced NLP and Generative AI techniques. Led the development of multi-agent systems and APIs tailored for chat applications, leveraging frameworks like AutoGen. Designed and implemented scalable APIs, ensuring seamless integration and high performance.
+        - Collaborated with cross-functional teams to deliver data-driven insights and innovative AI solutions, optimizing patient care and operational efficiencies.
+
     - title: Machine Learning Engineer
       institution: Beez Innovation Labs Pvt. Ltd.
       year: 2022 - Present
