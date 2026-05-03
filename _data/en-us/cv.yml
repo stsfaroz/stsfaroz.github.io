@@ -3,8 +3,6 @@
   contents:
     - name: Full Name
       value: Salman Faroz S T
-    - name: Date of Birth
-      value: 13th August 1996
     - name: Languages
       value: Tamil, English
 
@@ -40,41 +38,36 @@
     - title: Diploma in Computer Science
       institution: KONGU HI-TEK POLYTECHNIC COLLEGE , Tamilnadu , India.
       year: 2015
-      # description:
-      #   - 'Dissertation: <a href="https://repositorio.unicamp.br/acervo/detalhe/1091235?guid=1665060444695&returnUrl=%2fresultado%2flistar%3fguid%3d1665060444695%26quantidadePaginas%3d1%26codigoRegistro%3d1091235%231091235&i=1">Single Image Super-Resolution based on Capsule Neural Networks</a> (PT-BR)'
-
-    # - title: BS in Computer Engineering
-    #   institution: Universidade Federal do Amazonas, Manaus, Brazil
-    #   year: 2012
-    #   description:
-    #     - "Final Project: Development of an Eclipse Plug-in for the ESBMC Tool using Zest Toolkit (PT-BR)"
-    #     - title: Extension Project (Hiwi Job)
-    #       contents:
-    #         - "Institut für Automatisierungs- und Softwaretechnik - Universität Stuttgart"
-    #         - "Project: Improve Academic use of Microsoft Office through VBA Macros"
-    #     - title: Training of Young Engineers for Digital TV Software Development
-    #       contents:
-    #         - Universidade Federal do Amazonas | CETELI - Centro de P&D em Tecnologia Eletrônica e da Informação
 
 - title: Professional Experience
   type: time_table
   contents:
+    - title: AI/ML Developer II
+      institution: tp.ai
+      year: April 2026 - Present
+      description:
+        - Working on advanced AI/ML solutions, focusing on scalable deployment and real-world applications of Generative AI and NLP.
+        - Contributing to the design and development of intelligent systems, enhancing automation and business efficiency.
+
     - title: Senior Machine Learning Engineer
       institution: FirstSource
-      year: 2024 - Present
+      year: 2024 - March 2026
       description:
-        - Specializing in healthcare solutions using advanced NLP and Generative AI techniques. Led the development of multi-agent systems and APIs tailored for chat applications, leveraging frameworks like AutoGen. Designed and implemented scalable APIs, ensuring seamless integration and high performance.
+        - Specialized in healthcare solutions using advanced NLP and Generative AI techniques. Led the development of multi-agent systems and APIs tailored for chat applications, leveraging frameworks like AutoGen.
+        - Designed and implemented scalable APIs, ensuring seamless integration and high performance.
         - Collaborated with cross-functional teams to deliver data-driven insights and innovative AI solutions, optimizing patient care and operational efficiencies.
 
     - title: Machine Learning Engineer
       institution: Beez Innovation Labs Pvt. Ltd.
       year: 2022 - 2024
       description:
-        - As the sole AI professional at this startup, I have been responsible for spearheading all AI initiatives. My work encompasses Generative AI (LLMs), Computer Vision, and NLP.
-        - I have been Building ML/DL models tailored to speciﬁc use cases, and managing the deployment phase using CI/CD pipelines, Docker, and Kubernates.I have successfully executed numerous Proof of Concepts (POCs) for clients, demonstrating the potential and eﬀectiveness of our AI solutions.
+        - As the sole AI professional at this startup, spearheaded all AI initiatives across Generative AI (LLMs), Computer Vision, and NLP.
+        - Built ML/DL models tailored to specific use cases and managed deployment using CI/CD pipelines, Docker, and Kubernetes.
+        - Successfully executed multiple Proof of Concepts (POCs) for clients, demonstrating the effectiveness of AI solutions.
 
     - title: Udemy Instructor (Self Employed)
       institution: Udemy
       year: 2021 - 2022
       description:
-        - As a self-employed instructor on Udemy, I developed and delivered a course that has attracted over 8000+ students. I managed all aspects of the course, including content creation, student engagement, and feedback collection.
+        - Developed and delivered an online course with 8000+ students.
+        - Managed end-to-end course lifecycle including content creation, student engagement, and feedback.
