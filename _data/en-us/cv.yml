@@ -17,12 +17,10 @@
       items:
         - "Model Fine Tuning : Skilled in fine-tuning AI models for specific tasks."
         - "Quantization Methods: Knowledgeable in quantizing models for efficient deployment."
-        - ...
     - title: Discriminative Artificial Intelligence
       items:
         - "Bayesian Inference: Applied Bayes’ Theorem for statistical modeling and inference."
         - "Attention Mechanisms: Experienced in implementing attention mechanisms from scratch"
-        - ...
 
 - title: Education
   type: time_table
