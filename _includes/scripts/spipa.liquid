@@ -288,7 +288,6 @@
       function applyBackgroundTheme(theme) {
         var starsEl = document.getElementById('tsparticles-stars');
         var sunEl = document.getElementById('sun-glow');
-        var moonEl = document.getElementById('moon-glow');
         var nebulaOne = document.getElementById('nebula-one');
         var nebulaTwo = document.getElementById('nebula-two');
 
@@ -296,7 +295,6 @@
           if (starsEl) starsEl.style.opacity = 0;
           if (meteorCanvas) meteorCanvas.style.opacity = 0;
           if (sunEl) sunEl.style.opacity = 1;
-          if (moonEl) moonEl.style.opacity = 0;
           if (nebulaOne) nebulaOne.style.opacity = 0;
           if (nebulaTwo) nebulaTwo.style.opacity = 0;
           if (starContainer) starContainer.pause();
@@ -306,7 +304,6 @@
           if (starsEl) starsEl.style.opacity = 1;
           if (meteorCanvas) meteorCanvas.style.opacity = 1;
           if (sunEl) sunEl.style.opacity = 0;
-          if (moonEl) moonEl.style.opacity = 1;
           if (nebulaOne) nebulaOne.style.opacity = 1;
           if (nebulaTwo) nebulaTwo.style.opacity = 1;
           if (starContainer) starContainer.play();
