@@ -346,10 +346,11 @@ parallel_localization: false
 #   convert -version
 imagemagick:
   enabled: true # enables responsive images for your site (recommended, see https://github.com/alshedivat/al-folio/issues/537)
+  # NOTE: only widths smaller than a given image's actual pixel width get generated
+  # (no upscaling) -- keep this at/below your smallest responsive image's real size,
+  # or figure.liquid's srcset will reference files that were never created.
   widths:
     - 480
-    - 800
-    - 1400
   input_directories:
     - assets/img/
   input_formats:
