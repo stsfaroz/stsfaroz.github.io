@@ -1,49 +1,76 @@
 ---
 ---
+%%% BEGIN AUTO-SYNCED (Semantic Scholar, do not edit by hand) %%%
+
+@InProceedings{arXiv.2609.07971,
+  abbr={Arxiv},
+  abstract={When you merge two fine-tuned models from the same base checkpoint by simply averaging their weights, you implicitly assume their attention subspaces are still aligned. Recent work attempts to fix misalignments by learning an invertible correction matrix, $M$, for each model's query and key projections. This correction cancels out---using $M$ on the query side and $M^{-T}$ on the key side---right before the dot product. However, this cancellation is only exact if nothing sits between the projection and the dot product. In reality, almost all modern open-weight language models put a rotary position embedding (RoPE) exactly there. In this paper, we show that this cancellation is exact under RoPE if and only if $M$ commutes with RoPE's per-position rotation. We derive the specific class of matrices where this holds: a scaled rotation acting independently within each RoPE frequency pair. This forms a strict, low-dimensional subset of the unconstrained matrices that current methods normally train. Building on this, we turn this constrained matrix class into a new merging method. While keeping the base weights entirely frozen, two fine-tunes each learn their own RoPE-compliant correction matrices. We optimize these corrections against a chosen blend ratio so the final result can be adjusted post-hoc like a dial, rather than locked into a single fixed merge. Our default approach trains at one fixed blend ratio, similar to how LoRA sets its scaling hyperparameter in advance. We also experiment with resampling the blend ratio randomly at every training step, and we report the results of both approaches.},
+  arxiv={2609.07971},
+  author={Salman Faroz},
+  booktitle={MeRoTune: RoPE-Safe Merging with a Tunable Dial},
+  month={september},
+  pdf={https://arxiv.org/pdf/2609.07971},
+  publisher={Arxiv},
+  title={MeRoTune: RoPE-Safe Merging with a Tunable Dial},
+  year={2026},
+}
+
 @InProceedings{10.48550/arXiv.2511.21101,
   abbr={Arxiv},
   abstract={Large Language Models (LLMs) demonstrate exceptional capabilities across general domains, yet their application to specialized sectors such as mortgage finance requires domain-specific knowledge augmentation while preserving instruction-following fidelity. We present MortgageLLM, a novel domain-specific large language model that addresses this dual challenge. It is developed using a dual-track specialization framework from a single base model (LLaMA-3.1-8B). We opted for this dual-expert approach as a single multi-task model suffers from performance trade-offs, where optimizing for structured tasks (via SFT) degrades conversational fidelity (via DPO). Our dual-track method solves this by creating two specialists, allowing each to be optimally trained for its distinct capability. Our approach applies the instruction residual technique to restore instruction-following capabilities post-domain adaptation without supervised fine-tuning. We contribute: (1) application of this residual technique to the highly specialized mortgage finance domain; (2) a dual-expert architecture combining a conversational Q&A model and a structured task model for classification and summarization; and (3) an intelligent task routing mechanism using few-shot classification performed by one of the expert models itself. We validate our approach on domain-specific benchmarks, where our final model (MLM v2) significantly outperforms the base LLaMA-3.1-8B-Instruct, achieving an LLM-as-a-Judge summarization score of 4.58 (vs. 3.99), a Q&A score of 4.09 (vs. 4.0), and a classification score of 2.6 (vs. 1.2). On semantic similarity, our model achieved a BERTScore of 0.77 for summarization (vs. 0.74), 0.68 for Q&A (vs. 0.58), and 0.75 for classification (vs. 0.73), substantially outperforming baseline approaches.},
   arxiv={2511.21101},
-  author={Manish Jain and Satheesh Kumar Ponnambalam and Salman Faroz and Chandrakanth Lns and Vinay Sharma},
+  author={Manish Jain and S. Ponnambalam and Salman Faroz and Chandrakanth Lns and Vin Sharma},
   booktitle={Mortgage Language Model: Domain-Adaptive Pretraining with Residual Instruction, Alignment Tuning, and Task-Specific Routing},
-  month={November},
+  month={november},
   pdf={https://arxiv.org/pdf/2511.21101},
-  preview={mllm.png},
   publisher={Arxiv},
   title={Mortgage Language Model: Domain-Adaptive Pretraining with Residual Instruction, Alignment Tuning, and Task-Specific Routing},
   year={2025},
 }
 
+@InProceedings{10.48550/arXiv.2504.09687,
+  abbr={Arxiv},
+  abstract={Continued pre-training of small language models offers a promising path for domain adaptation with limited computational resources. I've investigated this approach within educational domains, evaluating it as a resource-efficient alternative to training models from scratch. Using a 125M parameter model, I demonstrate significant performance improvements through incremental training on 400 million tokens, followed by further training to reach 1 billion tokens. My approach includes comprehensive data preprocessing, memory-optimized training configurations, and benchmark-based evaluation. Results show notable gains in knowledge-intensive tasks (MMLU +8.1%) and contextual understanding (HellaSwag +7.6%), while revealing educational domain specialization trade-offs. I analyze token efficiency, catastrophic forgetting mitigation strategies, and scaling patterns. My findings suggest that thoughtful preprocessing and training methodologies enable meaningful improvements in language model capabilities even with constrained computational resources, opening pathways for domain-specific adaptation of smaller language models.},
+  arxiv={2504.09687},
+  author={Salman Faroz},
+  booktitle={Domain-Adaptive Continued Pre-Training of Small Language Models},
+  month={april},
+  pdf={https://arxiv.org/pdf/2504.09687},
+  publisher={Arxiv},
+  title={Domain-Adaptive Continued Pre-Training of Small Language Models},
+  year={2025},
+}
+
 @InProceedings{10.48550/arXiv.2412.15258,
   abbr={Arxiv},
-  abstract={The medical domain is vast and diverse, with many existing embedding models focused on general healthcare applications. However, these models often struggle to capture a deep understanding of diseases due to their broad generalization across the entire medical field. To address this gap, I present DisEmbed, a disease-focused embedding model. DisEmbed is trained on a synthetic dataset specifically curated to include disease descriptions, symptoms, and disease-related Q&A pairs, making it uniquely suited for disease-related tasks. For evaluation, I benchmarked DisEmbed against existing medical models using disease-specific datasets and the triplet evaluation method. My results demonstrate that DisEmbed outperforms other models, particularly in identifying disease-related contexts and distinguishing between similar diseases. This makes DisEmbed highly valuable for disease-specific use cases, including retrieval-augmented generation (RAG) tasks, where its performance is particularly robust.},
+  abstract={The medical domain is vast and diverse, with many existing embedding models focused on general healthcare applications. However, these models often struggle to capture a deep understanding of diseases due to their broad generalization across the entire medical field. To address this gap, I present DisEmbed, a disease-focused embedding model. DisEmbed is trained on a synthetic dataset specifically curated to include disease descriptions, symptoms, and disease-related Q\&A pairs, making it uniquely suited for disease-related tasks. For evaluation, I benchmarked DisEmbed against existing medical models using disease-specific datasets and the triplet evaluation method. My results demonstrate that DisEmbed outperforms other models, particularly in identifying disease-related contexts and distinguishing between similar diseases. This makes DisEmbed highly valuable for disease-specific use cases, including retrieval-augmented generation (RAG) tasks, where its performance is particularly robust.},
   arxiv={2412.15258},
   author={Salman Faroz},
   booktitle={DisEmbed: Transforming Disease Understanding through Embeddings},
-  month={December},
+  month={december},
   pdf={https://arxiv.org/pdf/2412.15258},
-  preview= {disembed.png},
   publisher={Arxiv},
   title={DisEmbed: Transforming Disease Understanding through Embeddings},
   year={2024},
 }
 
-
 @InProceedings{10.48550/arXiv.2403.01128,
   abbr={Arxiv},
-  abstract    = {Gradients can be employed for sensitivity analysis. Here, we leverage the advantages of the Loss Landscape to comprehend which independent variables impact the dependent variable. We seek to grasp the loss landscape by utilizing first, second, and third derivatives through automatic differentiation. we know that Spearman's rank correlation coefficient can detect the monotonic relationship between two variables. However, I have found that second-order gradients, with certain configurations and parameters, provide information that can be visualized similarly to Spearman results, In this approach, we incorporate a loss function with an activation function, resulting in a non-linear pattern. Each exploration of the loss landscape through retraining yields new valuable information. Furthermore, the first and third derivatives are also beneficial, as they indicate the extent to which independent variables influence the dependent variable.},
-  arxiv       = {2403.01128},
-  author      = {Salman Faroz},
-  bibtex_show = {true},
-  booktitle   = {this paper. Using gradients for sensitivity analysis, exploring the loss landscape through first, second, and third derivatives},
-  month       = {march},
-  pdf         = {https://arxiv.org/pdf/2403.01128},
-  preview     = {loss.png},
-  publisher   = {Arxiv},
-  title       = {Sensitivity Analysis On Loss Landscape},
-  year        = {2024},
+  abstract={Gradients can be employed for sensitivity analysis. Here, we leverage the advantages of the Loss Landscape to comprehend which independent variables impact the dependent variable. We seek to grasp the loss landscape by utilizing first, second, and third derivatives through automatic differentiation. we know that Spearman's rank correlation coefficient can detect the monotonic relationship between two variables. However, I have found that second-order gradients, with certain configurations and parameters, provide information that can be visualized similarly to Spearman results, In this approach, we incorporate a loss function with an activation function, resulting in a non-linear pattern. Each exploration of the loss landscape through retraining yields new valuable information. Furthermore, the first and third derivatives are also beneficial, as they indicate the extent to which independent variables influence the dependent variable.},
+  arxiv={2403.01128},
+  author={Salman Faroz},
+  bibtex_show={true},
+  booktitle={Sensitivity Analysis On Loss Landscape},
+  month={march},
+  pdf={https://arxiv.org/pdf/2403.01128},
+  publisher={Arxiv},
+  title={Sensitivity Analysis On Loss Landscape},
+  year={2024},
 }
 
+%%% END AUTO-SYNCED (Semantic Scholar) %%%
+
+% Manually curated -- not indexed on Semantic Scholar (local journal), never touched by sync
 @InProceedings{10.55041/IJSREM17431,
   abbr={IJSREM},
   abstract    = {Annually, approximately 12 million people worldwide suffer due to the misdiagnosis of diseases. To tackle this critical issue, a novel approach for early disease detection is proposed, encompassing conditions such as pneumonia, diabetic retinopathy, and more. Patients can assess disease severity based on the provided medical reports, enabling predictions of mild, moderate, severe, or proliferative stages. Leveraging deep learning models, this system empowers individuals to accurately predict the likelihood of these diseases. The primary targets of this model are patients and hospitals, benefitting from unique image processing techniques that ensure higher accuracy. Building upon the success of existing deep learning models for diabetic retinopathy and pneumonia, the proposed system holds promising potential for advancing disease diagnosis and improving patient outcomes.},
@@ -52,7 +79,6 @@
   booktitle   = {this research, deep learning-based system is proposed for early detection of diseases like pneumonia and diabetic retinopathy, enabling patients and hospitals to predict disease severity and improve diagnosis accuracy. This system builds on successful existing models, promising advancements in disease diagnosis and patient outcomes.},
   doi         = {https://www.doi.org/10.55041/IJSREM17431},
   pdf        = {https://www.researchgate.net/publication/373071954_Health_Care_Prediction_System_Using_Deep_Learning},
-  preview     = {health.png},
   month       = {august},
   publisher   = {International Journal of Scientific Research in Engineering and Management (IJSREM)},
   title       = {Health Care Prediction System Using  Deep Learning},

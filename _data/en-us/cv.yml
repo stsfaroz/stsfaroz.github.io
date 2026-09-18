@@ -6,21 +6,21 @@
     - name: Languages
       value: Tamil, English
 
-- title: Academic Interests
+- title: Areas of Expertise
   type: nested_list
   contents:
     - title: Mathematics
       items:
-        - "Vector Calculus: Good in understanding and applying vector field theories."
-        - "Optimization Techniques: Experienced in using optimization methods for problem-solving."
-    - title: Generative Artificial Intelligence
+        - "Vector Calculus"
+        - "Optimization Techniques"
+    - title: Generative AI
       items:
-        - "Model Fine Tuning : Skilled in fine-tuning AI models for specific tasks."
-        - "Quantization Methods: Knowledgeable in quantizing models for efficient deployment."
-    - title: Discriminative Artificial Intelligence
+        - "Model Fine-Tuning (SFT, DPO, LoRA)"
+        - "Quantization for Efficient Deployment"
+    - title: Discriminative AI
       items:
-        - "Bayesian Inference: Applied Bayes’ Theorem for statistical modeling and inference."
-        - "Attention Mechanisms: Experienced in implementing attention mechanisms from scratch"
+        - "Bayesian Inference"
+        - "Attention Mechanisms"
 
 - title: Education
   type: time_table
@@ -67,5 +67,5 @@
       institution: Udemy
       year: 2021 - 2022
       description:
-        - Developed and delivered an online course with 8000+ students.
+        - Developed and delivered an online course with 10k+ students.
         - Managed end-to-end course lifecycle including content creation, student engagement, and feedback.

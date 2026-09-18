@@ -1,136 +1,372 @@
 {% if page.name == 'about.md' and page.animated_background %}
-<script
-    defer
-    src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
-    integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k="
-    crossorigin="anonymous"
-></script>
+<script src="https://cdn.jsdelivr.net/npm/@tsparticles/engine@4/tsparticles.engine.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tsparticles/slim@4/tsparticles.slim.bundle.min.js"></script>
 <script defer type="text/javascript">
-    function hexToRGB(h) {
-      let r = 0, g = 0, b = 0;
-      if (h.length == 4) {
-        r = '0x' + h[1] + h[1];
-        g = '0x' + h[2] + h[2];
-        b = '0x' + h[3] + h[3];
-      } else if (h.length == 7) {
-        r = '0x' + h[1] + h[2];
-        g = '0x' + h[3] + h[4];
-        b = '0x' + h[5] + h[6];
-      }
-      return { r: +r, g: +g, b: +b };
-    }
- 
-    var App = {};
-    App.setup = function () {
-      var canvas = document.getElementsByTagName('canvas')[0];
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      this.canvas = canvas;
-      this.ctx = this.canvas.getContext('2d');
-      this.stars = [];
-      this.maxStars = 300; // Number of stars
-      this.createStars();
-      this.meteor = this.createMeteor(); // Create a meteor
-      this.meteorTimeout = null; // Timeout for meteor delay
-      this.meteorVisible = true; // Flag to control meteor visibility
-      this.animate();
-    };
- 
-    App.createStars = function () {
-      for (let i = 0; i < this.maxStars; i++) {
-        this.stars.push({
-          x: Math.random() * this.canvas.width,
-          y: Math.random() * this.canvas.height,
-          size: Math.random() * 1 + 0.5, // Size between 1 and 4
-          speed: Math.random() * 0.5 + 0.1, // Speed between 0.1 and 0.3
-          stationary: Math.random() < 0.3 // 30% chance to be stationary
-        });
-      }
-    };
+  (function () {
+    var starContainer = null;
+    var meteorCanvas, meteorCtx, meteorRAF = null;
+    var meteor = null;
+    var meteorTimeout = null;
 
-    App.createMeteor = function () {
-      return {
-        x: 0, // Start from the left
-        y: 0, // Start from the top
-        size: 5, // Size of the meteor
-        tailLength: 30, // Length of the tail
-        speed: 3 // Speed of the meteor
-      };
-    };
+    // Custom mouse-attraction loop, driven directly via the public tsParticles
+    // Particle API (position/velocity) rather than tsParticles' own built-in
+    // interactivity plugin, so it has no dependency on that plugin's internals.
+    var mouseX = null;
+    var mouseY = null;
+    var attractRAF = null;
+    var ATTRACT_RADIUS = 260;
+    var ATTRACT_STRENGTH = 0.22;
+    var MAX_SPEED = 7;
 
-    App.animate = function () {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.stars.forEach(star => {
-        this.drawStar(star);
-        if (!star.stationary) {
-          star.y -= star.speed; // Move star up
-          if (star.y < 0) {
-            star.y = this.canvas.height; // Reset star to the bottom
-            star.x = Math.random() * this.canvas.width; // Randomize x position
+    function applyAttractionFrame() {
+      if (starContainer && mouseX !== null) {
+        // Particle positions are in device pixels (detectRetina: true); mouse
+        // coordinates are CSS pixels, so scale by the container's pixel ratio.
+        var ratio = (starContainer.retina && starContainer.retina.pixelRatio) || 1;
+        var mx = mouseX * ratio;
+        var my = mouseY * ratio;
+        var radius = ATTRACT_RADIUS * ratio;
+
+        var count = starContainer.particles.count;
+        for (var i = 0; i < count; i++) {
+          var p = starContainer.particles.get(i);
+          if (!p) continue;
+
+          if (p.__baseSize === undefined) {
+            p.__baseSize = p.size.value;
+            p.__baseOpacity = p.opacity ? p.opacity.value : 1;
+          }
+
+          var dx = mx - p.position.x;
+          var dy = my - p.position.y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var factor = dist < radius ? (radius - dist) / radius : 0;
+
+          // Brighten & enlarge stars near the cursor, so the effect reads
+          // instantly rather than relying only on the (subtler) motion.
+          p.size.value = p.__baseSize * (1 + factor * 1.8);
+          if (p.opacity) {
+            p.opacity.value = Math.min(1, p.__baseOpacity + factor * 0.9);
+          }
+
+          if (factor > 0) {
+            var force = factor * ATTRACT_STRENGTH;
+            p.velocity.x += (dx / dist) * force;
+            p.velocity.y += (dy / dist) * force;
+
+            var speed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.y * p.velocity.y);
+            if (speed > MAX_SPEED) {
+              p.velocity.x = (p.velocity.x / speed) * MAX_SPEED;
+              p.velocity.y = (p.velocity.y / speed) * MAX_SPEED;
+            }
           }
         }
+      }
+
+      attractRAF = requestAnimationFrame(applyAttractionFrame);
+    }
+
+    function startAttract() {
+      if (attractRAF) return;
+      applyAttractionFrame();
+    }
+
+    // Split the star field into three depth layers (far/mid/near) so it
+    // reads as a starfield with real depth instead of a flat scatter of
+    // uniform dots -- distant stars are smaller, dimmer and drift slower;
+    // near stars are bigger, brighter and drift faster.
+    function applyDepthLayers(container) {
+      var count = container.particles.count;
+      for (var i = 0; i < count; i++) {
+        var p = container.particles.get(i);
+        if (!p) continue;
+
+        var roll = Math.random();
+        var size, opacity, speedFactor;
+
+        if (roll < 0.55) {
+          // far
+          size = 0.3 + Math.random() * 0.3;
+          opacity = 0.15 + Math.random() * 0.25;
+          speedFactor = 0.5;
+        } else if (roll < 0.85) {
+          // mid
+          size = 0.6 + Math.random() * 0.5;
+          opacity = 0.35 + Math.random() * 0.35;
+          speedFactor = 1;
+        } else {
+          // near
+          size = 1.1 + Math.random() * 0.7;
+          opacity = 0.6 + Math.random() * 0.4;
+          speedFactor = 1.7;
+        }
+
+        p.size.value = size;
+        if (p.opacity) p.opacity.value = opacity;
+        p.velocity.x *= speedFactor;
+        p.velocity.y *= speedFactor;
+      }
+    }
+
+    function stopAttract() {
+      if (attractRAF) {
+        cancelAnimationFrame(attractRAF);
+        attractRAF = null;
+      }
+    }
+
+    function resizeMeteorCanvas() {
+      meteorCanvas.width = window.innerWidth;
+      meteorCanvas.height = window.innerHeight;
+    }
+
+    function spawnMeteor() {
+      // Fixed top-left to bottom-right diagonal, like the original.
+      var speed = 2 + Math.random() * 1;
+      meteor = {
+        x: 0,
+        y: 0,
+        vx: speed,
+        vy: speed * 0.5,
+        length: 130 + Math.random() * 90,
+        headRadius: 1.8 + Math.random() * 1.4,
+      };
+    }
+
+    function drawMeteorFrame() {
+      meteorCtx.clearRect(0, 0, meteorCanvas.width, meteorCanvas.height);
+
+      if (meteor) {
+        var speedMag = Math.sqrt(meteor.vx * meteor.vx + meteor.vy * meteor.vy);
+        var dirX = -meteor.vx / speedMag;
+        var dirY = -meteor.vy / speedMag;
+        var perpX = -dirY;
+        var perpY = dirX;
+
+        var tailX = meteor.x + dirX * meteor.length;
+        var tailY = meteor.y + dirY * meteor.length;
+        var headHalfWidth = meteor.headRadius * 2;
+
+        // Tapered tail: a triangle from a wide edge at the head down to a
+        // point at the tail end, filled with a fading gradient.
+        var gradient = meteorCtx.createLinearGradient(meteor.x, meteor.y, tailX, tailY);
+        gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+        gradient.addColorStop(0.35, "rgba(210, 225, 255, 0.45)");
+        gradient.addColorStop(1, "rgba(210, 225, 255, 0)");
+
+        meteorCtx.beginPath();
+        meteorCtx.moveTo(meteor.x + perpX * headHalfWidth, meteor.y + perpY * headHalfWidth);
+        meteorCtx.lineTo(meteor.x - perpX * headHalfWidth, meteor.y - perpY * headHalfWidth);
+        meteorCtx.lineTo(tailX, tailY);
+        meteorCtx.closePath();
+        meteorCtx.fillStyle = gradient;
+        meteorCtx.fill();
+
+        // Glowing head.
+        meteorCtx.save();
+        meteorCtx.shadowColor = "rgba(255, 255, 255, 0.95)";
+        meteorCtx.shadowBlur = 14;
+        meteorCtx.fillStyle = "rgba(255, 255, 255, 1)";
+        meteorCtx.beginPath();
+        meteorCtx.arc(meteor.x, meteor.y, meteor.headRadius, 0, 2 * Math.PI);
+        meteorCtx.fill();
+        meteorCtx.restore();
+
+        meteor.x += meteor.vx;
+        meteor.y += meteor.vy;
+
+        if (meteor.x - meteor.length > meteorCanvas.width || meteor.y - meteor.length > meteorCanvas.height) {
+          meteor = null;
+          meteorTimeout = setTimeout(function () {
+            meteorTimeout = null;
+            spawnMeteor();
+          }, 6000 + Math.random() * 9000);
+        }
+      }
+
+      meteorRAF = requestAnimationFrame(drawMeteorFrame);
+    }
+
+    function startMeteor() {
+      if (meteorRAF) return;
+      if (!meteor && !meteorTimeout) {
+        meteorTimeout = setTimeout(function () {
+          meteorTimeout = null;
+          spawnMeteor();
+        }, 500 + Math.random() * 4000);
+      }
+      drawMeteorFrame();
+    }
+
+    function stopMeteor() {
+      if (meteorRAF) {
+        cancelAnimationFrame(meteorRAF);
+        meteorRAF = null;
+      }
+      if (meteorTimeout) {
+        clearTimeout(meteorTimeout);
+        meteorTimeout = null;
+      }
+      meteorCtx.clearRect(0, 0, meteorCanvas.width, meteorCanvas.height);
+    }
+
+    // Nebula color/position is randomized per page load, picked from a
+    // curated palette + a set of corner slots so it always looks tasteful
+    // rather than truly arbitrary.
+    var NEBULA_PALETTE = [
+      { r: 45, g: 170, b: 165 }, // teal
+      { r: 190, g: 60, b: 120 }, // rose / magenta
+      { r: 120, g: 90, b: 200 }, // purple
+      { r: 60, g: 110, b: 200 }, // blue
+      { r: 200, g: 140, b: 60 }, // amber
+      { r: 90, g: 180, b: 120 }, // green
+    ];
+    var NEBULA_CORNERS = [
+      { top: true, left: true },
+      { top: true, left: false },
+      { top: false, left: true },
+      { top: false, left: false },
+    ];
+
+    function shuffled(arr) {
+      var a = arr.slice();
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = a[i];
+        a[i] = a[j];
+        a[j] = tmp;
+      }
+      return a;
+    }
+
+    function randomizeNebula() {
+      var colors = shuffled(NEBULA_PALETTE).slice(0, 2);
+      var corners = shuffled(NEBULA_CORNERS).slice(0, 2);
+      var maxOpacity = [0.1, 0.09];
+      var els = [document.getElementById("nebula-one"), document.getElementById("nebula-two")];
+
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (!el) continue;
+
+        var c = colors[i];
+        el.style.background =
+          "radial-gradient(circle at 50% 50%, rgba(" +
+          c.r + ", " + c.g + ", " + c.b + ", " + maxOpacity[i] + ") 0%, rgba(" +
+          c.r + ", " + c.g + ", " + c.b + ", 0) 70%)";
+
+        var corner = corners[i];
+        var vOffset = (5 + Math.random() * 14).toFixed(1) + "%";
+        var hOffset = (5 + Math.random() * 14).toFixed(1) + "%";
+        el.style.top = corner.top ? vOffset : "";
+        el.style.bottom = corner.top ? "" : vOffset;
+        el.style.left = corner.left ? hOffset : "";
+        el.style.right = corner.left ? "" : hOffset;
+      }
+    }
+
+    function applyBackgroundTheme(theme) {
+      var starsEl = document.getElementById("tsparticles-stars");
+      var sunEl = document.getElementById("sun-glow");
+      var moonEl = document.getElementById("moon-glow");
+      var nebulaOne = document.getElementById("nebula-one");
+      var nebulaTwo = document.getElementById("nebula-two");
+
+      if (theme === "light") {
+        if (starsEl) starsEl.style.opacity = 0;
+        if (meteorCanvas) meteorCanvas.style.opacity = 0;
+        if (sunEl) sunEl.style.opacity = 1;
+        if (moonEl) moonEl.style.opacity = 0;
+        if (nebulaOne) nebulaOne.style.opacity = 0;
+        if (nebulaTwo) nebulaTwo.style.opacity = 0;
+        if (starContainer) starContainer.pause();
+        stopMeteor();
+        stopAttract();
+      } else {
+        if (starsEl) starsEl.style.opacity = 1;
+        if (meteorCanvas) meteorCanvas.style.opacity = 1;
+        if (sunEl) sunEl.style.opacity = 0;
+        if (moonEl) moonEl.style.opacity = 1;
+        if (nebulaOne) nebulaOne.style.opacity = 1;
+        if (nebulaTwo) nebulaTwo.style.opacity = 1;
+        if (starContainer) starContainer.play();
+        startMeteor();
+        startAttract();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      randomizeNebula();
+
+      meteorCanvas = document.getElementById("meteor-canvas");
+      meteorCtx = meteorCanvas.getContext("2d");
+      resizeMeteorCanvas();
+      window.addEventListener("resize", resizeMeteorCanvas);
+
+      var starsEl = document.getElementById("tsparticles-stars");
+      var PARALLAX_STRENGTH = 18; // max px shift
+
+      window.addEventListener("mousemove", function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        // Cursor parallax tilt: the star layer shifts a few px opposite the
+        // cursor, independent of the per-star attraction effect, so there's
+        // a constant subtle depth cue even when not hovering near any star.
+        var offsetX = (e.clientX / window.innerWidth - 0.5) * -2 * PARALLAX_STRENGTH;
+        var offsetY = (e.clientY / window.innerHeight - 0.5) * -2 * PARALLAX_STRENGTH;
+        var transform = "translate(" + offsetX.toFixed(1) + "px, " + offsetY.toFixed(1) + "px)";
+        if (starsEl) starsEl.style.transform = transform;
+        if (meteorCanvas) meteorCanvas.style.transform = transform;
       });
-      if (this.meteorVisible) {
-        this.drawMeteor(this.meteor); // Draw the meteor
-      }
-      this.updateMeteor(this.meteor); // Update the meteor position
-      requestAnimationFrame(this.animate.bind(this));
-    };
 
-    App.drawStar = function (star) {
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // White color with some transparency
-      this.ctx.beginPath();
-      this.ctx.arc(star.x, star.y, star.size, 0, 2 * Math.PI); // Draw circular star
-      this.ctx.closePath();
-      this.ctx.fill();
-    };
+      loadSlim(tsParticles).then(function () {
+        return tsParticles.load({
+          id: "tsparticles-stars",
+          options: {
+            fpsLimit: 60,
+            detectRetina: true,
+            background: { color: "transparent" },
+            particles: {
+              number: { value: 450, density: { enable: false } },
+              // Mostly white, with a small fraction of pale-blue / warm-amber
+              // stars, like real stellar color classes -- avoids a flat,
+              // uniformly-white field.
+              color: {
+                value: ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#cfe8ff", "#ffe4b8"],
+              },
+              opacity: {
+                value: { min: 0.2, max: 1 },
+                animation: { enable: true, speed: 1, sync: false },
+              },
+              size: { value: { min: 0.5, max: 1.5 } },
+              move: {
+                enable: true,
+                speed: 0.3,
+                direction: "top",
+                random: true,
+                straight: false,
+                outModes: { default: "out" },
+              },
+            },
+          },
+        }).then(function (container) {
+          starContainer = container;
+          applyDepthLayers(container);
+          var theme = document.documentElement.getAttribute("data-theme") || "dark";
+          applyBackgroundTheme(theme);
+        });
+      });
 
-    App.drawMeteor = function (meteor) {
-      // Draw the tail with a slight angle
-      const tailAngle = Math.cos(400); // 20 degrees
-      const tailX = meteor.x - meteor.tailLength * Math.cos(tailAngle);
-      const tailY = meteor.y + meteor.tailLength * Math.sin(tailAngle);
-
-      // Draw the tail
-      const tailGradient = this.ctx.createLinearGradient(meteor.x, meteor.y, tailX, tailY);
-      tailGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Start with bright white
-      tailGradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fade to transparent
-
-      this.ctx.strokeStyle = tailGradient;
-      this.ctx.lineWidth = 5; // Increase the width to make it look like a triangle
-      this.ctx.beginPath();
-      this.ctx.moveTo(meteor.x, meteor.y);
-      this.ctx.lineTo(tailX, tailY);
-      this.ctx.stroke();
-
-      // Draw the meteor
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Bright white color
-      this.ctx.beginPath();
-      this.ctx.arc(meteor.x, meteor.y, meteor.size, 0, 2 * Math.PI); // Draw circular meteor
-      this.ctx.closePath();
-      this.ctx.fill();
-    };
-
-    App.updateMeteor = function (meteor) {
-      if (this.meteorTimeout) return; // Skip update if timeout is active
-
-      meteor.x += meteor.speed; // Move meteor right
-      meteor.y += meteor.speed * 0.5; // Move downwards
-
-      // Reset meteor when it goes off screen
-      if (meteor.x > this.canvas.width || meteor.y > this.canvas.height) {
-        this.meteorVisible = false; // Make meteor invisible
-        this.meteorTimeout = setTimeout(() => {
-          meteor.x = 0; // Reset to the left
-          meteor.y = 0; // Reset to the top
-          this.meteorVisible = true; // Make meteor visible again
-          this.meteorTimeout = null; // Clear timeout
-        }, 10000); // 30 seconds delay
-      }
-    };
-
-    document.addEventListener('DOMContentLoaded', function () {
-      App.setup();
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+          if (m.attributeName === "data-theme") {
+            applyBackgroundTheme(document.documentElement.getAttribute("data-theme") || "dark");
+          }
+        });
+      });
+      observer.observe(document.documentElement, { attributes: true });
     });
+  })();
 </script>
 {% endif %}

@@ -459,13 +459,22 @@ footer.fixed-bottom {
 }
 
 footer.sticky-bottom {
-  border-top: 1px solid var(--global-divider-color);
-  padding-top: 40px;
-  padding-bottom: 40px;
-  font-size: 0.9rem;
+  padding-top: 12px;
+  padding-bottom: 16px;
+  font-size: 0.7rem;
+  color: var(--global-text-color-light);
+  opacity: 0.6;
 
   .container {
     text-align: center;
+  }
+
+  a {
+    color: var(--global-text-color-light);
+
+    &:hover {
+      color: var(--global-theme-color);
+    }
   }
 }
 
@@ -684,7 +693,7 @@ footer.sticky-bottom {
     border-top: 1px solid var(--global-divider-color);
     padding-top: 1rem;
     margin-top: 2rem;
-    margin-bottom: -2rem;
+    margin-bottom: 0.5rem;
     text-align: right;
   }
 
@@ -708,12 +717,15 @@ footer.sticky-bottom {
 
         abbr {
           display: inline-block;
-          background-color: var(--global-theme-color);
-          padding-left: 1rem;
-          padding-right: 1rem;
+          background-color: color-mix(in srgb, var(--badge-color, var(--global-theme-color)) 12%, transparent);
+          border: 1px solid var(--badge-color, var(--global-theme-color));
+          color: var(--badge-color, var(--global-theme-color));
+          font-weight: 600;
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
 
           a {
-            color: white;
+            color: inherit;
 
             &:hover {
               text-decoration: none;
@@ -1168,4 +1180,85 @@ swiper-container {
 ::highlight(search) {
   background-color: var(--global-theme-color);
   color: var(--global-text-color);
+}
+
+// Animated background: light-mode sun glow (companion to the dark-mode star field)
+.sun-glow {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 205, 110, 0.9) 0%, rgba(255, 170, 60, 0.45) 35%, rgba(255, 170, 60, 0) 70%);
+  animation: sun-pulse 6s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+// Animated background: dark-mode moon glow (night-side counterpart to the sun)
+.moon-glow {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.2s ease-out;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(235, 240, 250, 0.55) 0%,
+    rgba(200, 215, 235, 0.28) 40%,
+    rgba(200, 215, 235, 0) 70%
+  );
+}
+
+// Animated background: faint drifting nebula clouds (dark mode only)
+.nebula-blob {
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(6px);
+  transition: opacity 1.2s ease, transform 0.2s ease-out;
+}
+
+.nebula-blob--one {
+  width: 480px;
+  height: 360px;
+  // background color/position is randomized per page load via JS
+  animation: nebula-drift-one 70s ease-in-out infinite;
+}
+
+.nebula-blob--two {
+  width: 420px;
+  height: 420px;
+  // background color/position is randomized per page load via JS
+  animation: nebula-drift-two 90s ease-in-out infinite;
+}
+
+@keyframes nebula-drift-one {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, -30px) scale(1.1);
+  }
+}
+
+@keyframes nebula-drift-two {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-50px, 25px) scale(1.05);
+  }
 }

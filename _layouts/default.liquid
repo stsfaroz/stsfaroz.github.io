@@ -23,7 +23,18 @@
   <!-- Body -->
   <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} {% unless site.footer_fixed %}sticky-bottom-footer{% endunless %}">
     {% if page.name == 'about.md' and page.animated_background %}
-      <canvas id="canvas" style="position: fixed; width: -webkit-fill-available; z-index: -1;"></canvas>
+      <div id="nebula-one" class="nebula-blob nebula-blob--one" style="position: fixed; z-index: -2;"></div>
+      <div id="nebula-two" class="nebula-blob nebula-blob--two" style="position: fixed; z-index: -2;"></div>
+      <div id="moon-glow" class="moon-glow" style="position: fixed; top: -60px; left: -60px; z-index: -1;"></div>
+      <div
+        id="tsparticles-stars"
+        style="position: fixed; inset: 0; z-index: -1; transition: opacity 0.6s ease, transform 0.2s ease-out;"
+      ></div>
+      <canvas
+        id="meteor-canvas"
+        style="position: fixed; inset: 0; z-index: -1; pointer-events: none; transition: opacity 0.6s ease, transform 0.2s ease-out;"
+      ></canvas>
+      <div id="sun-glow" class="sun-glow" style="position: fixed; top: -90px; right: -90px; z-index: -1;"></div>
     {% endif %}
     <!-- Header -->
     {% include header.liquid %}
