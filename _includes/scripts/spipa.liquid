@@ -17,7 +17,8 @@
       var mouseY = null;
       var attractRAF = null;
       var ATTRACT_RADIUS = 260;
-      var ATTRACT_STRENGTH = 0.22;
+      var ATTRACT_STRENGTH = 0.14;
+      var ORBIT_STRENGTH = 0.24; // tangential pull -- makes stars curve/swirl around the cursor like a gravity well, instead of flying straight in
       var MAX_SPEED = 7;
 
       function applyAttractionFrame() {
@@ -52,9 +53,19 @@
             }
 
             if (factor > 0) {
-              var force = factor * ATTRACT_STRENGTH;
-              p.velocity.x += (dx / dist) * force;
-              p.velocity.y += (dy / dist) * force;
+              // Radial pull toward the cursor (gravity) plus a tangential
+              // push perpendicular to it (orbital motion) -- together they
+              // make stars curve and swirl around the cursor like orbiting
+              // a sun, rather than flying straight into it.
+              var radialForce = factor * ATTRACT_STRENGTH;
+              var orbitForce = factor * ORBIT_STRENGTH;
+              var radialX = dx / dist;
+              var radialY = dy / dist;
+              var tangentX = -radialY;
+              var tangentY = radialX;
+
+              p.velocity.x += radialX * radialForce + tangentX * orbitForce;
+              p.velocity.y += radialY * radialForce + tangentY * orbitForce;
 
               var speed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.y * p.velocity.y);
               if (speed > MAX_SPEED) {
