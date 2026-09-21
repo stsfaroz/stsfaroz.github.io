@@ -16,6 +16,8 @@
       // interactivity plugin, so it has no dependency on that plugin's internals.
       var mouseX = null;
       var mouseY = null;
+      var markerX = null;
+      var markerY = null;
       // The star layer is visually shifted by the parallax transform below;
       // the attraction math has to compensate for that shift, or the "pull
       // point" drifts away from the actual visible cursor position.
@@ -23,10 +25,19 @@
       var parallaxOffsetY = 0;
       var attractRAF = null;
       var attractLastTime = null;
-      var ATTRACT_RADIUS = 260;
+      var ATTRACT_RADIUS = 165; // a bit larger than the tight 110 test, still well short of the original 260 that felt like the whole screen moving
       var ATTRACT_STRENGTH = 0.32; // radial pull dominates now, so stars actually converge near the cursor
       var ORBIT_STRENGTH = 0.13; // tangential -- just enough to curve the approach, not sweep stars into wide arcs
-      var MAX_SPEED = 8.5;
+      var MAX_SPEED = 3.2; // low enough that captured stars can't reach "escape velocity" and slingshot away permanently
+      var EVENT_HORIZON_RADIUS = 26; // stars crossing this close are consumed -- a real point of no return, not just a strong pull
+      // The black hole *marker* (visual glow) only settles in once the
+      // cursor stops moving -- the gravity pull on stars stays active the
+      // whole time regardless, only the visible circle is gated by this.
+      var idleAmount = 0;
+      var idleCheckX = null;
+      var idleCheckY = null;
+      var idleStillSince = null;
+      var IDLE_DELAY_MS = 2000; // cursor has to be genuinely still this long before the marker starts to appear -- otherwise it looks like it's being dragged around
 
       // Target a 60fps baseline: dt=1 means "this frame arrived exactly
       // 1/60s after the last one". A 120Hz display fires callbacks twice as
@@ -41,6 +52,23 @@
         }
         attractLastTime = timestamp;
 
+        if (mouseX !== null) {
+          var cursorMoved = idleCheckX === null || Math.abs(mouseX - idleCheckX) > 0.5 || Math.abs(mouseY - idleCheckY) > 0.5;
+          if (cursorMoved) {
+            idleAmount = Math.max(0, idleAmount - 0.18 * dt);
+            idleStillSince = null;
+          } else {
+            if (idleStillSince === null) {
+              idleStillSince = timestamp;
+            }
+            if (timestamp - idleStillSince > IDLE_DELAY_MS) {
+              idleAmount = Math.min(1, idleAmount + 0.035 * dt);
+            }
+          }
+          idleCheckX = mouseX;
+          idleCheckY = mouseY;
+        }
+
         if (starContainer && mouseX !== null) {
           // Particle positions are in device pixels (detectRetina: true) and
           // don't know about the parallax transform applied to their
@@ -52,6 +80,39 @@
           var my = (mouseY - parallaxOffsetY) * ratio;
           var radius = ATTRACT_RADIUS * ratio;
 
+          // The black hole marker: a small dark circle with a dull orange glow,
+          // positioned near the cursor and only shown once it's settled
+          // (idleAmount) -- not while actively moving. It eases toward the
+          // cursor rather than snapping to it -- something with real mass
+          // wouldn't teleport around the screen.
+          if (markerX === null) {
+            markerX = mouseX;
+            markerY = mouseY;
+          } else {
+            var markerEase = 1 - Math.pow(1 - 0.06, dt);
+            markerX += (mouseX - markerX) * markerEase;
+            markerY += (mouseY - markerY) * markerEase;
+          }
+
+          if (meteorCtx && idleAmount > 0.01) {
+            var markerR = 5;
+            var glowR = 18;
+            meteorCtx.save();
+            var glow = meteorCtx.createRadialGradient(markerX, markerY, markerR, markerX, markerY, glowR);
+            glow.addColorStop(0, 'rgba(200, 130, 60, ' + (idleAmount * 0.35).toFixed(2) + ')');
+            glow.addColorStop(1, 'rgba(200, 130, 60, 0)');
+            meteorCtx.beginPath();
+            meteorCtx.fillStyle = glow;
+            meteorCtx.arc(markerX, markerY, glowR, 0, 2 * Math.PI);
+            meteorCtx.fill();
+
+            meteorCtx.beginPath();
+            meteorCtx.fillStyle = 'rgba(4, 4, 6, ' + (idleAmount * 0.9).toFixed(2) + ')';
+            meteorCtx.arc(markerX, markerY, markerR, 0, 2 * Math.PI);
+            meteorCtx.fill();
+            meteorCtx.restore();
+          }
+
           var count = starContainer.particles.count;
           for (var i = 0; i < count; i++) {
             var p = starContainer.particles.get(i);
@@ -60,25 +121,70 @@
             if (p.__baseSize === undefined) {
               p.__baseSize = p.size.value;
               p.__baseOpacity = p.opacity ? p.opacity.value : 1;
+              p.__baseSpeed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.y * p.velocity.y);
+              p.__baseOpacityVelocity = p.opacity ? p.opacity.velocity : undefined;
             }
 
             var dx = mx - p.position.x;
             var dy = my - p.position.y;
             var dist = Math.sqrt(dx * dx + dy * dy);
+
             var factor = dist < radius ? (radius - dist) / radius : 0;
 
             // Brighten & enlarge stars near the cursor, so the effect reads
             // instantly rather than relying only on the (subtler) motion.
-            p.size.value = p.__baseSize * (1 + factor * 1.8);
+            p.size.value = p.__baseSize * (1 + factor * 3);
             if (p.opacity) {
               p.opacity.value = Math.min(1, p.__baseOpacity + factor * 0.9);
+            }
+
+            // What actually happens at a real event horizon, from our
+            // (outside observer's) point of view: nothing ever visibly
+            // crosses it. Infalling matter asymptotically slows, dims, and
+            // redshifts forever, getting arbitrarily close but never
+            // observed to actually reach the boundary. So instead of
+            // deleting a star at a hard cutoff, its inward motion gets
+            // damped and it fades out the closer it gets -- it only quietly
+            // recycles once it's already imperceptible, which looks
+            // identical to "faded to nothing" rather than "vanished".
+            var horizonZone = EVENT_HORIZON_RADIUS * 2.5 * ratio;
+            if (dist < horizonZone) {
+              var freeze = 1 - (dist - EVENT_HORIZON_RADIUS * ratio) / (horizonZone - EVENT_HORIZON_RADIUS * ratio);
+              freeze = Math.min(1, Math.max(0, freeze));
+
+              var radialUnitX = dx / dist;
+              var radialUnitY = dy / dist;
+              var velRadial = p.velocity.x * radialUnitX + p.velocity.y * radialUnitY;
+              if (velRadial > 0) {
+                var radialDamp = Math.pow(1 - freeze, 3);
+                var velRadialDelta = velRadial * radialDamp - velRadial;
+                p.velocity.x += radialUnitX * velRadialDelta;
+                p.velocity.y += radialUnitY * velRadialDelta;
+              }
+
+              p.size.value *= 1 - freeze * 0.6;
+              if (p.opacity) {
+                p.opacity.value *= 1 - freeze * 0.97;
+                if (freeze > 0.9 && p.opacity.value < 0.02) {
+                  starContainer.particles.remove(p);
+                  starContainer.particles.push(1);
+                  continue;
+                }
+              }
+            }
+
+            // Time dilation: real gravity slows time nearby, so slow each
+            // star's own twinkle animation the closer it is to the cursor
+            // (tsParticles exposes the animation's own rate as .velocity).
+            if (p.opacity && p.__baseOpacityVelocity !== undefined) {
+              p.opacity.velocity = p.__baseOpacityVelocity * (1 - factor * 0.85);
             }
 
             if (factor > 0) {
               // Radial pull toward the cursor (gravity) plus a tangential
               // push perpendicular to it (orbital motion) -- together they
               // make stars curve and swirl around the cursor like orbiting
-              // a sun, rather than flying straight into it.
+              // a compact gravity well, rather than flying straight into it.
               var radialForce = factor * ATTRACT_STRENGTH;
               var orbitForce = factor * ORBIT_STRENGTH;
               var radialX = dx / dist;
@@ -93,6 +199,58 @@
               if (speed > MAX_SPEED) {
                 p.velocity.x = (p.velocity.x / speed) * MAX_SPEED;
                 p.velocity.y = (p.velocity.y / speed) * MAX_SPEED;
+              }
+
+              var sx = p.position.x / ratio;
+              var sy = p.position.y / ratio;
+
+              // Tidal stretching ("spaghettification"): the closer a star
+              // gets, the more it visually stretches along the line toward
+              // the cursor -- real effect of strong nearby gravity.
+              if (factor > 0.5) {
+                var stretchAmt = (factor - 0.5) * 2;
+                var stretchLen = stretchAmt * 16;
+                var tailX = sx - radialX * stretchLen;
+                var tailY = sy - radialY * stretchLen;
+                var headX = sx + radialX * stretchLen * 0.3;
+                var headY = sy + radialY * stretchLen * 0.3;
+
+                var stretchGrad = meteorCtx.createLinearGradient(headX, headY, tailX, tailY);
+                stretchGrad.addColorStop(0, 'rgba(255, 255, 255, ' + (0.15 + stretchAmt * 0.5).toFixed(2) + ')');
+                stretchGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                meteorCtx.strokeStyle = stretchGrad;
+                meteorCtx.lineWidth = Math.max(0.6, p.__baseSize * 0.5);
+                meteorCtx.beginPath();
+                meteorCtx.moveTo(headX, headY);
+                meteorCtx.lineTo(tailX, tailY);
+                meteorCtx.stroke();
+              }
+
+              // Accretion heating: matter compresses and heats up as it
+              // nears a black hole, shifting from white toward hot blue-white
+              // the closer it gets (real accretion disks are visibly bluer
+              // and hotter near the center, cooler/redder further out).
+              if (factor > 0.15) {
+                var heat = (factor - 0.15) / 0.85;
+                var glowR = p.__baseSize * 3.5 + 2;
+
+                meteorCtx.beginPath();
+                meteorCtx.fillStyle = 'rgba(140, 190, 255, ' + (heat * 0.55).toFixed(2) + ')';
+                meteorCtx.arc(sx, sy, glowR, 0, 2 * Math.PI);
+                meteorCtx.fill();
+              }
+            } else {
+              // Once a star leaves the interaction zone, nothing was
+              // bringing its velocity back down -- it would just keep
+              // drifting off at whatever speed it picked up, even long
+              // after the cursor moved away. Damp it back toward its
+              // natural ambient speed instead.
+              var curSpeed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.y * p.velocity.y);
+              if (curSpeed > p.__baseSpeed * 1.2) {
+                var damping = Math.pow(0.82, dt);
+                p.velocity.x *= damping;
+                p.velocity.y *= damping;
               }
             }
           }
@@ -157,15 +315,21 @@
       }
 
       function spawnMeteor() {
-        // Fixed top-left to bottom-right diagonal, like the original.
-        var speed = 2.6 + Math.random() * 1.2;
+        // A tumbling rock, not a "shooting star" -- in real vacuum there's
+        // no atmosphere to create a glowing trail, so no tail here. It's
+        // mostly dim/near-invisible, occasionally catching a brief glint of
+        // starlight as it slowly tumbles, drifting at a modest pace rather
+        // than streaking dramatically.
+        var angle = ((20 + Math.random() * 50) * Math.PI) / 180;
+        var speed = 0.5 + Math.random() * 0.5;
         meteor = {
-          x: 0,
-          y: 0,
-          vx: speed,
-          vy: speed * 0.5,
-          length: 130 + Math.random() * 90,
-          headRadius: 1.8 + Math.random() * 1.4,
+          x: Math.random() * window.innerWidth * 0.6,
+          y: -30 - Math.random() * 80,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          headRadius: 2.2 + Math.random() * 1.6,
+          glintPhase: Math.random() * Math.PI * 2,
+          glintSpeed: 0.02 + Math.random() * 0.03,
         };
       }
 
@@ -178,46 +342,74 @@
 
         meteorCtx.clearRect(0, 0, meteorCanvas.width, meteorCanvas.height);
 
+        if (meteor && mouseX !== null) {
+          // The black hole deflects (or consumes) the meteor too, same
+          // physics as the stars -- a real black hole bends the path of
+          // anything passing close, meteors included.
+          var mdx = mouseX - meteor.x;
+          var mdy = mouseY - meteor.y;
+          var mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+          if (mdist < ATTRACT_RADIUS) {
+            var mFactor = (ATTRACT_RADIUS - mdist) / ATTRACT_RADIUS;
+            var mRadialX = mdx / mdist;
+            var mRadialY = mdy / mdist;
+            var mTangentX = -mRadialY;
+            var mTangentY = mRadialX;
+
+            meteor.vx += (mRadialX * mFactor * ATTRACT_STRENGTH + mTangentX * mFactor * ORBIT_STRENGTH) * dt;
+            meteor.vy += (mRadialY * mFactor * ATTRACT_STRENGTH + mTangentY * mFactor * ORBIT_STRENGTH) * dt;
+          }
+
+          // Same "never actually crosses" behavior as the stars: damp the
+          // inward motion and fade it out rather than deleting it at a
+          // hard cutoff, so it asymptotically freezes near the horizon
+          // instead of visibly popping out of existence.
+          var mHorizonZone = EVENT_HORIZON_RADIUS * 2.5;
+          meteor.freeze = 0;
+          if (mdist < mHorizonZone) {
+            meteor.freeze = Math.min(1, Math.max(0, 1 - (mdist - EVENT_HORIZON_RADIUS) / (mHorizonZone - EVENT_HORIZON_RADIUS)));
+
+            var mRadialUnitX = mdx / mdist;
+            var mRadialUnitY = mdy / mdist;
+            var mVelRadial = meteor.vx * mRadialUnitX + meteor.vy * mRadialUnitY;
+            if (mVelRadial > 0) {
+              var mRadialDamp = Math.pow(1 - meteor.freeze, 3);
+              var mVelRadialDelta = mVelRadial * mRadialDamp - mVelRadial;
+              meteor.vx += mRadialUnitX * mVelRadialDelta;
+              meteor.vy += mRadialUnitY * mVelRadialDelta;
+            }
+
+            if (meteor.freeze > 0.985) {
+              meteor = null;
+              meteorTimeout = setTimeout(
+                function () {
+                  meteorTimeout = null;
+                  spawnMeteor();
+                },
+                6000 + Math.random() * 9000
+              );
+            }
+          }
+        }
+
         if (meteor) {
-          var speedMag = Math.sqrt(meteor.vx * meteor.vx + meteor.vy * meteor.vy);
-          var dirX = -meteor.vx / speedMag;
-          var dirY = -meteor.vy / speedMag;
-          var perpX = -dirY;
-          var perpY = dirX;
-
-          var tailX = meteor.x + dirX * meteor.length;
-          var tailY = meteor.y + dirY * meteor.length;
-          var headHalfWidth = meteor.headRadius * 2;
-
-          // Tapered tail: a triangle from a wide edge at the head down to a
-          // point at the tail end, filled with a fading gradient.
-          var gradient = meteorCtx.createLinearGradient(meteor.x, meteor.y, tailX, tailY);
-          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-          gradient.addColorStop(0.35, 'rgba(210, 225, 255, 0.45)');
-          gradient.addColorStop(1, 'rgba(210, 225, 255, 0)');
+          // Mostly dim (barely lit by distant starlight), with an occasional
+          // brief glint as it slowly tumbles and catches the light at a
+          // reflective angle -- no glow, no tail.
+          meteor.glintPhase += meteor.glintSpeed * dt;
+          var glint = Math.max(0, Math.sin(meteor.glintPhase));
+          var brightness = (0.12 + Math.pow(glint, 6) * 0.85) * (1 - (meteor.freeze || 0) * 0.97);
 
           meteorCtx.beginPath();
-          meteorCtx.moveTo(meteor.x + perpX * headHalfWidth, meteor.y + perpY * headHalfWidth);
-          meteorCtx.lineTo(meteor.x - perpX * headHalfWidth, meteor.y - perpY * headHalfWidth);
-          meteorCtx.lineTo(tailX, tailY);
-          meteorCtx.closePath();
-          meteorCtx.fillStyle = gradient;
-          meteorCtx.fill();
-
-          // Glowing head.
-          meteorCtx.save();
-          meteorCtx.shadowColor = 'rgba(255, 255, 255, 0.95)';
-          meteorCtx.shadowBlur = 14;
-          meteorCtx.fillStyle = 'rgba(255, 255, 255, 1)';
-          meteorCtx.beginPath();
+          meteorCtx.fillStyle = 'rgba(200, 205, 215, ' + brightness.toFixed(2) + ')';
           meteorCtx.arc(meteor.x, meteor.y, meteor.headRadius, 0, 2 * Math.PI);
           meteorCtx.fill();
-          meteorCtx.restore();
 
           meteor.x += meteor.vx * dt;
           meteor.y += meteor.vy * dt;
 
-          if (meteor.x - meteor.length > meteorCanvas.width || meteor.y - meteor.length > meteorCanvas.height) {
+          if (meteor.x - meteor.headRadius > meteorCanvas.width || meteor.y - meteor.headRadius > meteorCanvas.height) {
             meteor = null;
             meteorTimeout = setTimeout(
               function () {
@@ -362,7 +554,7 @@
         window.addEventListener('resize', resizeMeteorCanvas);
 
         var starsEl = document.getElementById('tsparticles-stars');
-        var PARALLAX_STRENGTH = 18; // max px shift
+        var PARALLAX_STRENGTH = 0; // max px shift -- 0 disables the parallax tilt (local test)
 
         window.addEventListener('mousemove', function (e) {
           mouseX = e.clientX;
@@ -387,7 +579,7 @@
                 detectRetina: true,
                 background: { color: 'transparent' },
                 particles: {
-                  number: { value: 450, density: { enable: false } },
+                  number: { value: 650, density: { enable: false } },
                   // Mostly white, with a small fraction of pale-blue / warm-amber
                   // stars, like real stellar color classes -- avoids a flat,
                   // uniformly-white field.
