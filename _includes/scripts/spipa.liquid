@@ -9,25 +9,47 @@
         meteorRAF = null;
       var meteor = null;
       var meteorTimeout = null;
+      var meteorLastTime = null;
 
       // Custom mouse-attraction loop, driven directly via the public tsParticles
       // Particle API (position/velocity) rather than tsParticles' own built-in
       // interactivity plugin, so it has no dependency on that plugin's internals.
       var mouseX = null;
       var mouseY = null;
+      // The star layer is visually shifted by the parallax transform below;
+      // the attraction math has to compensate for that shift, or the "pull
+      // point" drifts away from the actual visible cursor position.
+      var parallaxOffsetX = 0;
+      var parallaxOffsetY = 0;
       var attractRAF = null;
+      var attractLastTime = null;
       var ATTRACT_RADIUS = 260;
-      var ATTRACT_STRENGTH = 0.14;
-      var ORBIT_STRENGTH = 0.24; // tangential pull -- makes stars curve/swirl around the cursor like a gravity well, instead of flying straight in
-      var MAX_SPEED = 7;
+      var ATTRACT_STRENGTH = 0.32; // radial pull dominates now, so stars actually converge near the cursor
+      var ORBIT_STRENGTH = 0.13; // tangential -- just enough to curve the approach, not sweep stars into wide arcs
+      var MAX_SPEED = 8.5;
 
-      function applyAttractionFrame() {
+      // Target a 60fps baseline: dt=1 means "this frame arrived exactly
+      // 1/60s after the last one". A 120Hz display fires callbacks twice as
+      // often, so each dt is ~0.5 -- multiplying every increment by dt keeps
+      // real-world speed (px/sec, force/sec) the same regardless of the
+      // viewer's refresh rate. Capped so a backgrounded/suspended tab
+      // regaining focus doesn't apply one giant catch-up jump.
+      function applyAttractionFrame(timestamp) {
+        var dt = 1;
+        if (attractLastTime !== null) {
+          dt = Math.min(Math.max((timestamp - attractLastTime) / (1000 / 60), 0), 4);
+        }
+        attractLastTime = timestamp;
+
         if (starContainer && mouseX !== null) {
-          // Particle positions are in device pixels (detectRetina: true); mouse
-          // coordinates are CSS pixels, so scale by the container's pixel ratio.
+          // Particle positions are in device pixels (detectRetina: true) and
+          // don't know about the parallax transform applied to their
+          // container div, so back that shift out of the mouse position
+          // before converting to device pixels -- otherwise the "pull
+          // point" drifts away from where the cursor actually is on screen.
           var ratio = (starContainer.retina && starContainer.retina.pixelRatio) || 1;
-          var mx = mouseX * ratio;
-          var my = mouseY * ratio;
+          var mx = (mouseX - parallaxOffsetX) * ratio;
+          var my = (mouseY - parallaxOffsetY) * ratio;
           var radius = ATTRACT_RADIUS * ratio;
 
           var count = starContainer.particles.count;
@@ -64,8 +86,8 @@
               var tangentX = -radialY;
               var tangentY = radialX;
 
-              p.velocity.x += radialX * radialForce + tangentX * orbitForce;
-              p.velocity.y += radialY * radialForce + tangentY * orbitForce;
+              p.velocity.x += (radialX * radialForce + tangentX * orbitForce) * dt;
+              p.velocity.y += (radialY * radialForce + tangentY * orbitForce) * dt;
 
               var speed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.y * p.velocity.y);
               if (speed > MAX_SPEED) {
@@ -81,7 +103,8 @@
 
       function startAttract() {
         if (attractRAF) return;
-        applyAttractionFrame();
+        attractLastTime = null; // avoid one huge dt jump on (re)start
+        attractRAF = requestAnimationFrame(applyAttractionFrame);
       }
 
       // Split the star field into three depth layers (far/mid/near) so it
@@ -135,7 +158,7 @@
 
       function spawnMeteor() {
         // Fixed top-left to bottom-right diagonal, like the original.
-        var speed = 2 + Math.random() * 1;
+        var speed = 2.6 + Math.random() * 1.2;
         meteor = {
           x: 0,
           y: 0,
@@ -146,7 +169,13 @@
         };
       }
 
-      function drawMeteorFrame() {
+      function drawMeteorFrame(timestamp) {
+        var dt = 1;
+        if (meteorLastTime !== null) {
+          dt = Math.min(Math.max((timestamp - meteorLastTime) / (1000 / 60), 0), 4);
+        }
+        meteorLastTime = timestamp;
+
         meteorCtx.clearRect(0, 0, meteorCanvas.width, meteorCanvas.height);
 
         if (meteor) {
@@ -185,8 +214,8 @@
           meteorCtx.fill();
           meteorCtx.restore();
 
-          meteor.x += meteor.vx;
-          meteor.y += meteor.vy;
+          meteor.x += meteor.vx * dt;
+          meteor.y += meteor.vy * dt;
 
           if (meteor.x - meteor.length > meteorCanvas.width || meteor.y - meteor.length > meteorCanvas.height) {
             meteor = null;
@@ -214,7 +243,8 @@
             500 + Math.random() * 4000
           );
         }
-        drawMeteorFrame();
+        meteorLastTime = null; // avoid one huge dt jump on (re)start
+        meteorRAF = requestAnimationFrame(drawMeteorFrame);
       }
 
       function stopMeteor() {
@@ -341,9 +371,9 @@
           // Cursor parallax tilt: the star layer shifts a few px opposite the
           // cursor, independent of the per-star attraction effect, so there's
           // a constant subtle depth cue even when not hovering near any star.
-          var offsetX = (e.clientX / window.innerWidth - 0.5) * -2 * PARALLAX_STRENGTH;
-          var offsetY = (e.clientY / window.innerHeight - 0.5) * -2 * PARALLAX_STRENGTH;
-          var transform = 'translate(' + offsetX.toFixed(1) + 'px, ' + offsetY.toFixed(1) + 'px)';
+          parallaxOffsetX = (e.clientX / window.innerWidth - 0.5) * -2 * PARALLAX_STRENGTH;
+          parallaxOffsetY = (e.clientY / window.innerHeight - 0.5) * -2 * PARALLAX_STRENGTH;
+          var transform = 'translate(' + parallaxOffsetX.toFixed(1) + 'px, ' + parallaxOffsetY.toFixed(1) + 'px)';
           if (starsEl) starsEl.style.transform = transform;
           if (meteorCanvas) meteorCanvas.style.transform = transform;
         });
